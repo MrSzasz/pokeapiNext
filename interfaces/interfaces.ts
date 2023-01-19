@@ -1,6 +1,11 @@
-export interface IPokemonList {
-  results: {
-    name: string;
-    link: string;
-  }[];
+export interface IReceivedData {
+  results: { name: string; url: string }[];
+}
+
+export interface IPokemonData {
+  name: string;
+  id: number;
+  sprites: {
+    front_default: string;
+  };
 }

@@ -1,10 +1,10 @@
 import Head from "next/head";
 import styles from "../styles/Home.module.css";
-import { GetStaticProps } from "next";
+import { GetStaticProps, InferGetStaticPropsType } from "next";
+import { IPokemonData, IReceivedData } from "../interfaces/interfaces";
+import Image from "next/image";
 
-const Home = ({ pkmData }: any) => {
-  
-  console.log(pkmData);
+const Home = ({ pkmArray }: InferGetStaticPropsType<GetStaticProps>) => {
   return (
     <>
       <Head>
@@ -14,23 +14,42 @@ const Home = ({ pkmData }: any) => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main>
-        <ul>
-          {pkmData.map((pkm: { name: string; link: string }, i: string) => (
-            <ul key={i}>{pkm.name}, {Number(i)+1}</ul>
-          ))}
-        </ul>
+        {pkmArray.map((pkm: IPokemonData, i: string) => (
+          <div key={i}>
+            <Image
+              src={pkm.sprites.front_default}
+              alt={`${pkm.name} image`}
+              width={50}
+              height={50}
+            />
+            <h2>{pkm.name}</h2>
+          </div>
+        ))}
       </main>
     </>
   );
 };
 
-export const getStaticProps: GetStaticProps = async (ctx) => {
-  const res = await fetch("https://pokeapi.co/api/v2/pokemon?limit=151");
-  const data = await res.json();
+export const getStaticProps: GetStaticProps = async () => {
+  const res = await fetch("https://pokeapi.co/api/v2/pokemon?limit=5");
+  const pkmData: IReceivedData = await res.json();
+  const pkmArray = await Promise.all(
+    pkmData.results.map(async (data) => {
+      const newRes = await fetch(data.url);
+      const finalRes: IPokemonData = await newRes.json();
+      return {
+        name: finalRes.name,
+        id: finalRes.id,
+        sprites: {
+          front_default: finalRes.sprites.front_default,
+        },
+      };
+    })
+  );
 
   return {
     props: {
-      pkmData: data.results,
+      pkmArray,
     },
   };
 };
